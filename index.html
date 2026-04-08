@@ -506,11 +506,15 @@ function render() {
     nextDate.textContent = formatDate(entry.date);
 
     if (entry.name) {
-      slotArea.innerHTML = `<div class="host-name">${entry.name}</div>`;
-      nextActions.innerHTML = `
-        <button class="btn btn-small" onclick="startOverride(${nextIdx})">Override</button>
-        <button class="btn btn-small btn-danger" onclick="clearAssignment(${nextIdx})">Clear</button>
-      `;
+      const lockIcon = entry.locked ? ' 🔒' : '';
+      slotArea.innerHTML = `<div class="host-name">${entry.name}${lockIcon}</div>`;
+      nextActions.innerHTML = entry.locked
+        ? `<button class="btn btn-small" onclick="toggleLock(${nextIdx})">Unlock</button>`
+        : `
+          <button class="btn btn-small" onclick="startOverride(${nextIdx})">Override</button>
+          <button class="btn btn-small btn-danger" onclick="clearAssignment(${nextIdx})">Clear</button>
+          <button class="btn btn-small" onclick="toggleLock(${nextIdx})">Lock</button>
+        `;
     } else {
       slotArea.innerHTML = `<div class="host-name empty">Not yet selected</div>`;
       nextActions.innerHTML = pool.length > 0
@@ -526,11 +530,14 @@ function render() {
   // Upcoming table
   const upBody = document.getElementById('upcoming-table').querySelector('tbody');
   upBody.innerHTML = appData.upcoming.map((u, i) => {
+    const lockIcon = u.locked ? ' 🔒' : '';
     const nameCell = u.name
-      ? `<td>${u.name}</td>`
+      ? `<td>${u.name}${lockIcon}</td>`
       : `<td class="unassigned">-</td>`;
     const overrideBtn = u.name
-      ? `<td class="override-cell"><button class="btn btn-small" onclick="startOverride(${i})">Override</button> <button class="btn btn-small btn-danger" onclick="clearAssignment(${i})">Clear</button></td>`
+      ? (u.locked
+        ? `<td class="override-cell"><button class="btn btn-small" onclick="toggleLock(${i})">Unlock</button></td>`
+        : `<td class="override-cell"><button class="btn btn-small" onclick="startOverride(${i})">Override</button> <button class="btn btn-small btn-danger" onclick="clearAssignment(${i})">Clear</button> <button class="btn btn-small" onclick="toggleLock(${i})">Lock</button></td>`)
       : `<td></td>`;
     return `<tr><td>${formatDate(u.date)}</td>${nameCell}${overrideBtn}</tr>`;
   }).join('');
@@ -699,6 +706,30 @@ async function confirmOverride() {
 // ========================
 // SETTINGS
 // ========================
+// ========================
+// LOCK / UNLOCK
+// ========================
+async function toggleLock(upcomingIdx) {
+  const entry = appData.upcoming[upcomingIdx];
+  if (!entry.name) return;
+
+  const newLocked = !entry.locked;
+  try {
+    appData.upcoming[upcomingIdx].locked = newLocked || undefined;
+    // Clean up: remove 'locked' key entirely if false (keep JSON clean)
+    if (!newLocked) delete appData.upcoming[upcomingIdx].locked;
+    const action = newLocked ? 'Locked' : 'Unlocked';
+    const result = await saveData(appData, dataSha, `${action} ${entry.name} for ${entry.date}`);
+    dataSha = result.content.sha;
+    render();
+  } catch (err) {
+    if (newLocked) delete appData.upcoming[upcomingIdx].locked;
+    else appData.upcoming[upcomingIdx].locked = true;
+    alert('Failed to save: ' + err.message);
+    render();
+  }
+}
+
 // ========================
 // CLEAR ASSIGNMENT
 // ========================
