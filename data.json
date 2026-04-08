@@ -32,25 +32,79 @@
     "Leon"
   ],
   "history": [
-    { "date": "2025-06-18", "name": "Peter" },
-    { "date": "2025-07-09", "name": "Artur" },
-    { "date": "2025-09-03", "name": "Brigitta" },
-    { "date": "2025-10-01", "name": "Reka" },
-    { "date": "2025-11-05", "name": "Agostino" },
-    { "date": "2025-12-10", "name": "Victor" },
-    { "date": "2026-01-14", "name": "Leon" },
-    { "date": "2026-02-11", "name": "Felicitas" },
-    { "date": "2026-03-11", "name": "Melle" },
-    { "date": "2026-04-08", "name": "Sarah" }
+    {
+      "date": "2025-06-18",
+      "name": "Peter"
+    },
+    {
+      "date": "2025-07-09",
+      "name": "Artur"
+    },
+    {
+      "date": "2025-09-03",
+      "name": "Brigitta"
+    },
+    {
+      "date": "2025-10-01",
+      "name": "Reka"
+    },
+    {
+      "date": "2025-11-05",
+      "name": "Agostino"
+    },
+    {
+      "date": "2025-12-10",
+      "name": "Victor"
+    },
+    {
+      "date": "2026-01-14",
+      "name": "Leon"
+    },
+    {
+      "date": "2026-02-11",
+      "name": "Felicitas"
+    },
+    {
+      "date": "2026-03-11",
+      "name": "Melle"
+    },
+    {
+      "date": "2026-04-08",
+      "name": "Sarah"
+    }
   ],
   "upcoming": [
-    { "date": "2026-05-06", "name": null },
-    { "date": "2026-06-03", "name": null },
-    { "date": "2026-07-01", "name": null },
-    { "date": "2026-08-05", "name": null },
-    { "date": "2026-09-02", "name": null },
-    { "date": "2026-10-07", "name": null },
-    { "date": "2026-11-04", "name": null },
-    { "date": "2026-12-02", "name": null }
+    {
+      "date": "2026-05-06",
+      "name": "Timothy"
+    },
+    {
+      "date": "2026-06-03",
+      "name": null
+    },
+    {
+      "date": "2026-07-01",
+      "name": null
+    },
+    {
+      "date": "2026-08-05",
+      "name": null
+    },
+    {
+      "date": "2026-09-02",
+      "name": null
+    },
+    {
+      "date": "2026-10-07",
+      "name": null
+    },
+    {
+      "date": "2026-11-04",
+      "name": null
+    },
+    {
+      "date": "2026-12-02",
+      "name": null
+    }
   ]
 }
