@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOLA Superteam Host Picker</title>
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --accent: #2d5a27;
+    --accent-light: #4a8c3f;
+    --text: #1a1a1a;
+    --muted: #666;
+    --border: #e0e0d8;
+    --danger: #c0392b;
+    --gold: #f0c040;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 1rem;
+  }
+
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    padding: 2rem 0 1rem;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+  }
+
+  .card h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  /* Next Up Card */
+  .next-up {
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .next-up .date {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .next-up .host-name {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent);
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .next-up .host-name.empty {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 1.2rem;
+  }
+
+  /* Slot Machine */
+  .slot-container {
+    height: 3.5rem;
+    overflow: hidden;
+    position: relative;
+    margin: 0.5rem 0;
+  }
+
+  .slot-reel {
+    position: absolute;
+    width: 100%;
+    transition: none;
+  }
+
+  .slot-reel .slot-item {
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-light);
+  }
+
+  .btn-small {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-small:hover:not(:disabled) {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+
+  .actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .unassigned {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .override-cell {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* Pool indicator */
+  .pool-info {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--bg);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .pool-info strong {
+    color: var(--accent);
+  }
+
+  /* Settings */
+  .settings-bar {
+    text-align: right;
+    margin-bottom: 0.5rem;
+  }
+
+  .settings-bar button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .settings-bar button:hover { color: var(--text); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 420px;
+  }
+
+  .modal h3 {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .modal label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+    margin-top: 0.75rem;
+  }
+
+  .modal input, .modal select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+
+  .modal .modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+  }
+
+  /* Status */
+  .status {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+
+  .status.error { color: var(--danger); }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 200;
+    animation: confetti-fall 2.5s ease-out forwards;
+  }
+
+  @keyframes confetti-fall {
+    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+  }
+
+  /* Cycle badge */
+  .cycle-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 500px) {
+    .next-up .host-name { font-size: 1.6rem; }
+    .slot-reel .slot-item { font-size: 1.6rem; }
+    .slot-container { height: 2.8rem; }
+    .slot-reel .slot-item { height: 2.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="settings-bar">
+    <button onclick="openSettings()">Settings</button>
+  </div>
+
+  <header>
+    <h1>LOLA Superteam Host Picker</h1>
+    <p>Random &amp; fair host selection for monthly meetings</p>
+  </header>
+
+  <div id="app-status" class="status">Loading...</div>
+  <div id="app-content" style="display:none;">
+
+    <div class="pool-info" id="pool-info"></div>
+
+    <!-- Next Up -->
+    <div class="card next-up" id="next-up-card">
+      <h2>Next Host</h2>
+      <div class="date" id="next-date"></div>
+      <div id="slot-area"></div>
+      <div class="actions" id="next-actions"></div>
+    </div>
+
+    <!-- Upcoming -->
+    <div class="card">
+      <h2>Upcoming</h2>
+      <table id="upcoming-table">
+        <thead><tr><th>Date</th><th>Host</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+      <h2>History</h2>
+      <table id="history-table">
+        <thead><tr><th>Date</th><th>Host</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h3>GitHub Settings</h3>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Connect to your GitHub repo to sync data across devices.</p>
+    <label>Repository owner (username or org)</label>
+    <input id="cfg-owner" type="text" placeholder="e.g. simonverbeeck">
+    <label>Repository name</label>
+    <input id="cfg-repo" type="text" placeholder="e.g. lola-superteam">
+    <label>Personal Access Token (fine-grained, Contents: read/write)</label>
+    <input id="cfg-token" type="password" placeholder="github_pat_...">
+    <label>Branch</label>
+    <input id="cfg-branch" type="text" placeholder="main" value="main">
+    <div class="modal-actions">
+      <button class="btn btn-small" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Override Modal -->
+<div class="modal-overlay" id="override-modal">
+  <div class="modal">
+    <h3>Override Host</h3>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.75rem;" id="override-context"></p>
+    <label>Select replacement</label>
+    <select id="override-select"></select>
+    <div class="modal-actions">
+      <button class="btn btn-small" onclick="closeOverride()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmOverride()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========================
+// CONFIG
+// ========================
+const CONFIG_KEY = 'superteam_config';
+const DATA_PATH = 'data.json';
+
+function getConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+  } catch { return {}; }
+}
+
+function isConfigured() {
+  const c = getConfig();
+  return c.owner && c.repo && c.token;
+}
+
+// ========================
+// GITHUB API
+// ========================
+async function ghFetch(method, body) {
+  const c = getConfig();
+  const url = `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${DATA_PATH}${c.branch && c.branch !== 'main' ? '?ref=' + c.branch : ''}`;
+  const opts = {
+    method,
+    headers: {
+      'Authorization': `Bearer ${c.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const resp = await fetch(url, opts);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.message || `GitHub API error ${resp.status}`);
+  }
+  return resp.json();
+}
+
+async function loadData() {
+  const result = await ghFetch('GET');
+  const content = atob(result.content.replace(/\n/g, ''));
+  return {
+    data: JSON.parse(content),
+    sha: result.sha
+  };
+}
+
+async function saveData(data, sha, message) {
+  const c = getConfig();
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2) + '\n')));
+  const body = {
+    message: message || 'Update superteam data',
+    content: encoded,
+    sha: sha
+  };
+  if (c.branch && c.branch !== 'main') body.branch = c.branch;
+  return ghFetch('PUT', body);
+}
+
+// ========================
+// STATE
+// ========================
+let appData = null;
+let dataSha = null;
+let overrideIndex = -1;
+
+// ========================
+// RENDER
+// ========================
+function getPool(data) {
+  const assigned = new Set([
+    ...data.history.map(h => h.name),
+    ...data.upcoming.filter(u => u.name).map(u => u.name)
+  ]);
+  let pool = data.team.filter(n => !assigned.has(n));
+
+  // If pool is empty, everyone has been assigned — calculate cycle
+  if (pool.length === 0) {
+    // Count how many full cycles have been completed
+    // Reset: everyone except those assigned in upcoming (current partial cycle)
+    const upcomingAssigned = new Set(data.upcoming.filter(u => u.name).map(u => u.name));
+    pool = data.team.filter(n => !upcomingAssigned.has(n));
+  }
+
+  return pool;
+}
+
+function getCycleNumber(data) {
+  const totalAssignments = data.history.length + data.upcoming.filter(u => u.name).length;
+  return Math.floor(totalAssignments / data.team.length) + 1;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getNextUnassigned() {
+  if (!appData) return -1;
+  return appData.upcoming.findIndex(u => !u.name);
+}
+
+function render() {
+  if (!appData) return;
+
+  const pool = getPool(appData);
+  const cycle = getCycleNumber(appData);
+  const nextIdx = getNextUnassigned();
+
+  // Pool info
+  document.getElementById('pool-info').innerHTML =
+    `<strong>${pool.length}</strong> of ${appData.team.length} available in cycle <span class="cycle-badge">${cycle}</span>`;
+
+  // Next up
+  const nextDate = document.getElementById('next-date');
+  const slotArea = document.getElementById('slot-area');
+  const nextActions = document.getElementById('next-actions');
+
+  if (nextIdx >= 0) {
+    const entry = appData.upcoming[nextIdx];
+    nextDate.textContent = formatDate(entry.date);
+
+    if (entry.name) {
+      slotArea.innerHTML = `<div class="host-name">${entry.name}</div>`;
+      nextActions.innerHTML = `
+        <button class="btn btn-small" onclick="startOverride(${nextIdx})">Override</button>
+      `;
+    } else {
+      slotArea.innerHTML = `<div class="host-name empty">Not yet selected</div>`;
+      nextActions.innerHTML = pool.length > 0
+        ? `<button class="btn btn-primary" onclick="randomize()" id="randomize-btn">Randomize</button>`
+        : `<span style="color:var(--muted);font-size:0.85rem;">No available members in pool</span>`;
+    }
+  } else {
+    nextDate.textContent = 'All dates assigned';
+    slotArea.innerHTML = `<div class="host-name empty">Add more dates in data.json</div>`;
+    nextActions.innerHTML = '';
+  }
+
+  // Upcoming table
+  const upBody = document.getElementById('upcoming-table').querySelector('tbody');
+  upBody.innerHTML = appData.upcoming.map((u, i) => {
+    const nameCell = u.name
+      ? `<td>${u.name}</td>`
+      : `<td class="unassigned">-</td>`;
+    const overrideBtn = u.name
+      ? `<td class="override-cell"><button class="btn btn-small" onclick="startOverride(${i})">Override</button></td>`
+      : `<td></td>`;
+    return `<tr><td>${formatDate(u.date)}</td>${nameCell}${overrideBtn}</tr>`;
+  }).join('');
+
+  // History table (newest first)
+  const histBody = document.getElementById('history-table').querySelector('tbody');
+  histBody.innerHTML = [...appData.history].reverse().map(h =>
+    `<tr><td>${formatDate(h.date)}</td><td>${h.name}</td></tr>`
+  ).join('');
+}
+
+// ========================
+// SLOT MACHINE ANIMATION
+// ========================
+async function randomize() {
+  const pool = getPool(appData);
+  const nextIdx = getNextUnassigned();
+  if (pool.length === 0 || nextIdx < 0) return;
+
+  const btn = document.getElementById('randomize-btn');
+  if (btn) btn.disabled = true;
+
+  // Pick the winner
+  const winnerIdx = Math.floor(Math.random() * pool.length);
+  const winner = pool[winnerIdx];
+
+  // Build slot reel
+  const slotArea = document.getElementById('slot-area');
+  const totalSpins = 30; // number of names to cycle through
+  const items = [];
+  for (let i = 0; i < totalSpins; i++) {
+    items.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+  items.push(winner); // last item is the winner
+
+  const itemHeight = window.innerWidth < 500 ? 2.8 : 3.5;
+
+  slotArea.innerHTML = `
+    <div class="slot-container">
+      <div class="slot-reel" id="slot-reel">
+        ${items.map(name => `<div class="slot-item">${name}</div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  const reel = document.getElementById('slot-reel');
+
+  // Animate: scroll through names
+  await new Promise(resolve => {
+    let currentPos = 0;
+    const totalDistance = items.length * itemHeight;
+    const duration = 3000; // 3 seconds
+    const startTime = performance.now();
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease out cubic — fast start, slow stop
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      const offset = eased * (items.length - 1) * itemHeight;
+      reel.style.transform = `translateY(-${offset}rem)`;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  });
+
+  // Confetti!
+  launchConfetti();
+
+  // Save to GitHub
+  try {
+    slotArea.innerHTML += `<div style="margin-top:0.5rem;"><span class="loading-spinner"></span> Saving...</div>`;
+    appData.upcoming[nextIdx].name = winner;
+    const result = await saveData(appData, dataSha, `Assigned ${winner} as host for ${appData.upcoming[nextIdx].date}`);
+    dataSha = result.content.sha;
+    render();
+  } catch (err) {
+    appData.upcoming[nextIdx].name = null;
+    alert('Failed to save: ' + err.message);
+    render();
+  }
+}
+
+function launchConfetti() {
+  const colors = ['#2d5a27', '#4a8c3f', '#f0c040', '#e67e22', '#3498db', '#e74c3c', '#9b59b6'];
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.top = -10 + 'px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.width = (Math.random() * 8 + 5) + 'px';
+    piece.style.height = (Math.random() * 8 + 5) + 'px';
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.animationDuration = (Math.random() * 1.5 + 2) + 's';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+// ========================
+// OVERRIDE
+// ========================
+function startOverride(upcomingIdx) {
+  overrideIndex = upcomingIdx;
+  const entry = appData.upcoming[upcomingIdx];
+  const pool = getPool(appData);
+
+  // Add the current person back to pool options (since they'll be freed)
+  const options = [...pool];
+  if (entry.name && !options.includes(entry.name)) {
+    // Don't add current person — we want to replace them
+  }
+
+  document.getElementById('override-context').textContent =
+    `Replace ${entry.name || '(empty)'} for ${formatDate(entry.date)}`;
+
+  const select = document.getElementById('override-select');
+  select.innerHTML = options
+    .sort((a, b) => a.localeCompare(b))
+    .map(n => `<option value="${n}">${n}</option>`)
+    .join('');
+
+  document.getElementById('override-modal').classList.add('active');
+}
+
+function closeOverride() {
+  document.getElementById('override-modal').classList.remove('active');
+  overrideIndex = -1;
+}
+
+async function confirmOverride() {
+  const select = document.getElementById('override-select');
+  const newName = select.value;
+  if (!newName || overrideIndex < 0) return;
+
+  const oldName = appData.upcoming[overrideIndex].name;
+  const date = appData.upcoming[overrideIndex].date;
+
+  closeOverride();
+
+  try {
+    appData.upcoming[overrideIndex].name = newName;
+    const msg = oldName
+      ? `Override: ${oldName} → ${newName} for ${date}`
+      : `Assigned ${newName} as host for ${date}`;
+    const result = await saveData(appData, dataSha, msg);
+    dataSha = result.content.sha;
+    render();
+  } catch (err) {
+    appData.upcoming[overrideIndex].name = oldName;
+    alert('Failed to save: ' + err.message);
+    render();
+  }
+}
+
+// ========================
+// SETTINGS
+// ========================
+function openSettings() {
+  const c = getConfig();
+  document.getElementById('cfg-owner').value = c.owner || '';
+  document.getElementById('cfg-repo').value = c.repo || '';
+  document.getElementById('cfg-token').value = c.token || '';
+  document.getElementById('cfg-branch').value = c.branch || 'main';
+  document.getElementById('settings-modal').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('active');
+}
+
+function saveSettings() {
+  const config = {
+    owner: document.getElementById('cfg-owner').value.trim(),
+    repo: document.getElementById('cfg-repo').value.trim(),
+    token: document.getElementById('cfg-token').value.trim(),
+    branch: document.getElementById('cfg-branch').value.trim() || 'main'
+  };
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+  closeSettings();
+  init();
+}
+
+// ========================
+// INIT
+// ========================
+async function init() {
+  const status = document.getElementById('app-status');
+  const content = document.getElementById('app-content');
+
+  if (!isConfigured()) {
+    status.style.display = 'block';
+    content.style.display = 'none';
+    status.innerHTML = `
+      <p>Welcome! Configure your GitHub repo to get started.</p>
+      <div style="margin-top:1rem;">
+        <button class="btn btn-primary" onclick="openSettings()">Setup GitHub Connection</button>
+      </div>
+    `;
+    return;
+  }
+
+  status.style.display = 'block';
+  content.style.display = 'none';
+  status.textContent = 'Loading from GitHub...';
+  status.className = 'status';
+
+  try {
+    const result = await loadData();
+    appData = result.data;
+    dataSha = result.sha;
+    status.style.display = 'none';
+    content.style.display = 'block';
+    render();
+  } catch (err) {
+    status.className = 'status error';
+    status.innerHTML = `
+      <p>Failed to load data: ${err.message}</p>
+      <div style="margin-top:1rem;">
+        <button class="btn btn-small" onclick="openSettings()">Check Settings</button>
+        <button class="btn btn-small" onclick="init()">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Start
+init();
+</script>
+
+</body>
+</html>
