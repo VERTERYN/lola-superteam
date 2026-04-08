@@ -509,6 +509,7 @@ function render() {
       slotArea.innerHTML = `<div class="host-name">${entry.name}</div>`;
       nextActions.innerHTML = `
         <button class="btn btn-small" onclick="startOverride(${nextIdx})">Override</button>
+        <button class="btn btn-small btn-danger" onclick="clearAssignment(${nextIdx})">Clear</button>
       `;
     } else {
       slotArea.innerHTML = `<div class="host-name empty">Not yet selected</div>`;
@@ -529,7 +530,7 @@ function render() {
       ? `<td>${u.name}</td>`
       : `<td class="unassigned">-</td>`;
     const overrideBtn = u.name
-      ? `<td class="override-cell"><button class="btn btn-small" onclick="startOverride(${i})">Override</button></td>`
+      ? `<td class="override-cell"><button class="btn btn-small" onclick="startOverride(${i})">Override</button> <button class="btn btn-small btn-danger" onclick="clearAssignment(${i})">Clear</button></td>`
       : `<td></td>`;
     return `<tr><td>${formatDate(u.date)}</td>${nameCell}${overrideBtn}</tr>`;
   }).join('');
@@ -698,6 +699,28 @@ async function confirmOverride() {
 // ========================
 // SETTINGS
 // ========================
+// ========================
+// CLEAR ASSIGNMENT
+// ========================
+async function clearAssignment(upcomingIdx) {
+  const entry = appData.upcoming[upcomingIdx];
+  if (!entry.name) return;
+
+  if (!confirm(`Clear ${entry.name} from ${formatDate(entry.date)}? You can then randomize again.`)) return;
+
+  const oldName = entry.name;
+  try {
+    appData.upcoming[upcomingIdx].name = null;
+    const result = await saveData(appData, dataSha, `Cleared ${oldName} from ${entry.date}`);
+    dataSha = result.content.sha;
+    render();
+  } catch (err) {
+    appData.upcoming[upcomingIdx].name = oldName;
+    alert('Failed to save: ' + err.message);
+    render();
+  }
+}
+
 // ========================
 // INIT
 // ========================
