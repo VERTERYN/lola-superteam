@@ -757,6 +757,47 @@ async function clearAssignment(upcomingIdx) {
 }
 
 // ========================
+// AUTO-PROMOTE: move past upcoming dates to history on page load
+// ========================
+async function autoPromote() {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const toMove = [];
+  const remaining = [];
+
+  for (const entry of appData.upcoming) {
+    if (entry.date < today && entry.name) {
+      // Past date with an assigned host — move to history
+      toMove.push({ date: entry.date, name: entry.name });
+    } else if (entry.date < today && !entry.name) {
+      // Past date with no host — just drop it
+      toMove.push(null);
+    } else {
+      remaining.push(entry);
+    }
+  }
+
+  if (toMove.length === 0) return; // nothing to promote
+
+  // Add assigned entries to history
+  for (const entry of toMove) {
+    if (entry) appData.history.push(entry);
+  }
+  appData.upcoming = remaining;
+
+  try {
+    const names = toMove.filter(Boolean).map(e => e.name).join(', ');
+    const result = await saveData(appData, dataSha, `Auto-promote to history: ${names || 'cleared past dates'}`);
+    dataSha = result.content.sha;
+  } catch (err) {
+    // Reload to get clean state if save fails
+    console.error('Auto-promote save failed:', err);
+    const result = await loadData();
+    appData = result.data;
+    dataSha = result.sha;
+  }
+}
+
+// ========================
 // INIT
 // ========================
 async function init() {
@@ -772,6 +813,7 @@ async function init() {
     const result = await loadData();
     appData = result.data;
     dataSha = result.sha;
+    await autoPromote();
     status.style.display = 'none';
     content.style.display = 'block';
     render();
