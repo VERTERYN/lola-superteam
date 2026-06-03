@@ -71,14 +71,13 @@
     {
       "date": "2026-04-08",
       "name": "Sarah"
+    },
+    {
+      "date": "2026-05-06",
+      "name": "Yueying"
     }
   ],
   "upcoming": [
-    {
-      "date": "2026-05-06",
-      "name": "Yueying",
-      "locked": true
-    },
     {
       "date": "2026-06-03",
       "name": "Mark"
